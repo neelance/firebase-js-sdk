@@ -60,9 +60,11 @@ import {
   WebStorageSharedClientState
 } from '../../../src/local/shared_client_state';
 import { WindowLike } from '../../../src/util/types';
-import { newSerializer } from '../../../src/platform/serializer';
 import { Datastore, newDatastore } from '../../../src/remote/datastore';
-import { JsonProtoSerializer } from '../../../src/remote/serializer';
+import {
+  JsonProtoSerializer,
+  newSerializer
+} from '../../../src/remote/serializer';
 
 /**
  * A test-only MemoryPersistence implementation that is able to inject

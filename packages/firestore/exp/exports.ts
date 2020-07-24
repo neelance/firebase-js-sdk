@@ -16,32 +16,40 @@
  */
 
 import './register';
-import { configureSerializer } from '../src/remote/serializer';
+
+export { FieldPath, documentId } from '../lite/src/api/field_path';
 
 export {
   Firestore as FirebaseFirestore,
   initializeFirestore,
   getFirestore,
+  enableIndexedDbPersistence,
+  enableMultiTabIndexedDbPersistence,
+  clearIndexedDbPersistence,
+  waitForPendingWrites,
+  disableNetwork,
+  enableNetwork,
   terminate
 } from './src/api/database';
 
 export {
+  DocumentSnapshot,
+  QueryDocumentSnapshot,
+  QuerySnapshot,
+  snapshotEqual
+} from './src/api/snapshot';
+
+export { SnapshotMetadata } from '../src/api/database';
+
+export {
   DocumentReference,
-  Query,
-  QueryConstraint,
   CollectionReference,
+  QueryConstraint,
+  Query,
+  doc,
   collection,
   collectionGroup,
-  doc,
   parent,
-  getDoc,
-  getDocs,
-  deleteDoc,
-  setDoc,
-  updateDoc,
-  addDoc,
-  refEqual,
-  queryEqual,
   startAt,
   startAfter,
   endAt,
@@ -51,12 +59,25 @@ export {
   limitToLast,
   where,
   orderBy
+} from '../lite/src/api/reference';
+
+export { runTransaction, Transaction } from './src/api/transaction';
+
+export {
+  getDoc,
+  getDocFromCache,
+  getDocFromServer,
+  getDocs,
+  getDocsFromCache,
+  getDocsFromServer,
+  onSnapshot,
+  onSnapshotsInSync,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  addDoc
 } from './src/api/reference';
 
-// TOOD(firestorelite): Add tests when Queries are usable
-export { FieldPath, documentId } from './src/api/field_path';
-
-// TOOD(firestorelite): Add tests when setDoc() is available
 export {
   FieldValue,
   deleteField,
@@ -64,25 +85,18 @@ export {
   arrayRemove,
   arrayUnion,
   serverTimestamp
-} from './src/api/field_value';
-
-export {
-  DocumentSnapshot,
-  QueryDocumentSnapshot,
-  QuerySnapshot,
-  snapshotEqual
-} from './src/api/snapshot';
-
-export { WriteBatch, writeBatch } from './src/api/write_batch';
-
-export { Transaction, runTransaction } from './src/api/transaction';
+} from '../lite/src/api/field_value';
 
 export { setLogLevel } from '../src/util/log';
 
 export { Blob } from '../src/api/blob';
 
+export { writeBatch } from './src/api/write_batch';
+
+export { WriteBatch } from '../lite/src/api/write_batch';
+
 export { GeoPoint } from '../src/api/geo_point';
 
 export { Timestamp } from '../src/api/timestamp';
 
-configureSerializer(/*useProto3Json=*/ true);
+export { refEqual, queryEqual } from '../lite/src/api/reference';

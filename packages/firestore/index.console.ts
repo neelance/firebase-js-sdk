@@ -18,6 +18,8 @@
 // TODO(mrschmidt): Once imported into Google3, fix
 // third_party/javascript/firebase/src/packages/firestore/tools/console.build.js
 
+import { configureSerializer } from './src/remote/serializer';
+
 export { Firestore, FirestoreDatabase } from './src/api/database';
 export {
   CollectionReference,
@@ -31,3 +33,5 @@ export { FirstPartyCredentialsSettings } from './src/api/credentials';
 export { FieldPath } from './src/api/field_path';
 export { FieldValue } from './src/api/field_value';
 export { Timestamp } from './src/api/timestamp';
+
+configureSerializer(/*useProto3Json=*/ true);

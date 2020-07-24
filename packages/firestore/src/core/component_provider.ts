@@ -58,7 +58,7 @@ import {
   MemoryPersistence
 } from '../local/memory_persistence';
 import { newConnection, newConnectivityMonitor } from '../platform/connection';
-import { newSerializer } from '../platform/serializer';
+import { newSerializer } from '../remote/serializer';
 import { getDocument, getWindow } from '../platform/dom';
 import { CredentialsProvider } from '../api/credentials';
 import { Connection } from '../remote/connection';

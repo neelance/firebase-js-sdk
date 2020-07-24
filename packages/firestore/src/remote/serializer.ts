@@ -105,6 +105,27 @@ function assertPresent(value: unknown, description: string): asserts value {
   debugAssert(!isNullOrUndefined(value), description + ' is missing');
 }
 
+let usesProto3Json: boolean | undefined;
+
+/**
+ * Sets the serialization options for the client. Called once during client
+ * startup.
+ *
+ * @param useProto3Json Whether to use Proto3 JSON, which uses strings for
+ * Timestamps, numbers and blobs.
+ */
+export function configureSerializer(useProto3Json: boolean) : void {
+  usesProto3Json = useProto3Json;
+}
+
+export function newSerializer(databaseId: DatabaseId): JsonProtoSerializer {
+  debugAssert(
+    usesProto3Json !== undefined,
+    '"usesProto3Json" not set. Must call setJsonSerializationOptions()'
+  );
+  return new JsonProtoSerializer(databaseId, usesProto3Json);
+}
+
 /**
  * This class generates JsonObject values for the Datastore API suitable for
  * sending to either GRPC stub methods or via the JSON/HTTP REST API.

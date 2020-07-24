@@ -66,13 +66,16 @@ import {
   limitToLast,
   limit,
   orderBy,
-  where
-} from '../../exp/index';
+  where,
+  Blob,
+  GeoPoint,
+  Timestamp
+} from '../exports';
 import { UntypedFirestoreDataConverter } from '../../src/api/user_data_reader';
 import { isPartialObserver, PartialObserver } from '../../src/api/observer';
 import { isPlainObject } from '../../src/util/input_validation';
 
-export { GeoPoint, Blob, Timestamp } from '../index';
+export { Blob, GeoPoint, Timestamp } from '../exports';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

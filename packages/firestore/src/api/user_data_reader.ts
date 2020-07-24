@@ -42,13 +42,14 @@ import {
   toBytes,
   toNumber,
   toResourceName,
-  toTimestamp
+  toTimestamp,
+  newSerializer 
 } from '../remote/serializer';
 import { Blob } from './blob';
 import { BaseFieldPath, fromDotSeparatedString } from './field_path';
 import { DeleteFieldValueImpl, SerializableFieldValue } from './field_value';
 import { GeoPoint } from './geo_point';
-import { newSerializer } from '../platform/serializer';
+
 
 const RESERVED_FIELD_REGEX = /^__.*__$/;
 

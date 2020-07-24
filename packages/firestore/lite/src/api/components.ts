@@ -16,8 +16,8 @@
  */
 
 import { Datastore, newDatastore } from '../../../src/remote/datastore';
-import { newConnection } from '../../../src/platform/connection';
-import { newSerializer } from '../../../src/platform/serializer';
+import { newRestConnection } from '../../../src/platform/connection';
+import { newSerializer } from '../../../src/remote/serializer';
 import { Firestore } from './database';
 import { DatabaseInfo } from '../../../src/core/database_info';
 import { logDebug } from '../../../src/util/log';
@@ -37,20 +37,21 @@ export const DEFAULT_SSL = true;
  * An instance map that ensures only one Datastore exists per Firestore
  * instance.
  */
-const datastoreInstances = new Map<Firestore, Promise<Datastore>>();
+const datastoreInstances = new Map<Firestore, Datastore>();
 
 /**
  * Returns an initialized and started Datastore for the given Firestore
  * instance. Callers must invoke removeDatastore() when the Firestore
  * instance is terminated.
  */
-export function getDatastore(firestore: Firestore): Promise<Datastore> {
+export function getDatastore(firestore: Firestore): Datastore {
   if (firestore._terminated) {
     throw new FirestoreError(
       Code.FAILED_PRECONDITION,
       'The client has already been terminated.'
     );
   }
+
   if (!datastoreInstances.has(firestore)) {
     logDebug(LOG_TAG, 'Initializing Datastore');
     const settings = firestore._getSettings();
@@ -61,14 +62,13 @@ export function getDatastore(firestore: Firestore): Promise<Datastore> {
       settings.ssl ?? DEFAULT_SSL,
       /* forceLongPolling= */ false
     );
-    const datastorePromise = newConnection(databaseInfo).then(connection => {
-      const serializer = newSerializer(databaseInfo.databaseId);
-      const datastore = newDatastore(firestore._credentials, serializer);
-      datastore.start(connection);
-      return datastore;
-    });
-    datastoreInstances.set(firestore, datastorePromise);
+    const connection = newRestConnection(databaseInfo);
+    const serializer = newSerializer(databaseInfo.databaseId);
+    const datastore = newDatastore(firestore._credentials, serializer);
+    datastore.start(connection);
+    datastoreInstances.set(firestore, datastore);
   }
+
   return datastoreInstances.get(firestore)!;
 }
 

@@ -24,6 +24,7 @@ import { configureForFirebase } from './src/config';
 import './register-module';
 
 import { name, version } from './package.json';
+import { configureSerializer } from './src/remote/serializer';
 
 /**
  * Registers the memory-only Firestore build for Node with the components
@@ -37,4 +38,5 @@ export function registerFirestore(instance: FirebaseNamespace): void {
   instance.registerVersion(name, version, 'node');
 }
 
+configureSerializer(/*useProto3Json=*/ false);
 registerFirestore(firebase);

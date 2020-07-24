@@ -24,6 +24,7 @@ import { configureForFirebase } from './src/config';
 import { name, version } from './package.json';
 
 import './register-module';
+import { configureSerializer } from './src/remote/serializer';
 
 /**
  * Registers the main Firestore build with the components framework.
@@ -38,4 +39,5 @@ export function registerFirestore(instance: FirebaseNamespace): void {
   instance.registerVersion(name, version);
 }
 
+configureSerializer(/*useProto3Json=*/ true);
 registerFirestore(firebase);

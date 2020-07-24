@@ -58,7 +58,7 @@ const browserPlugins = [
 const allBuilds = [
   // Node build
   {
-    input: './exp/index.ts',
+    input: './exp/index.node.ts',
     output: {
       file: path.resolve('./exp', pkg.main),
       format: 'umd',

@@ -31,7 +31,7 @@ import { withTestDbsSettings } from './helpers';
 import { User } from '../../../src/auth/user';
 import { DEFAULT_PROJECT_ID, DEFAULT_SETTINGS } from './settings';
 import { newConnection } from '../../../src/platform/connection';
-import { newSerializer } from '../../../src/platform/serializer';
+import { newSerializer } from '../../../src/remote/serializer';
 
 /** Helper to retrieve the AsyncQueue for a give FirebaseFirestore instance. */
 export function asyncQueue(db: firestore.FirebaseFirestore): AsyncQueue {

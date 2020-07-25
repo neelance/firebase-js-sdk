@@ -243,9 +243,9 @@ export function mapCodeFromHttpStatus(status: number): Code {
       return Code.OK;
 
     case 400: // Bad Request
-      return Code.INVALID_ARGUMENT;
+      return Code.FAILED_PRECONDITION;
     // Other possibilities based on the forward mapping
-    // return Code.FAILED_PRECONDITION;
+    // return Code.INVALID_ARGUMENT;
     // return Code.OUT_OF_RANGE;
 
     case 401: // Unauthorized

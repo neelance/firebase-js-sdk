@@ -72,7 +72,7 @@ export abstract class RestConnection implements Connection {
     delete jsonObj.parent;
     delete jsonObj.database;
 
-    logDebug(LOG_TAG, 'Sending: ', url + ' ' + jsonObj);
+    logDebug(LOG_TAG, 'Sending: ', url,  jsonObj);
 
     // Content-Type: text/plain will avoid preflight requests which might
     // mess with CORS and redirects by proxies. If we add custom headers

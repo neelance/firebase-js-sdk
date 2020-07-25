@@ -66,10 +66,7 @@ import {
   limitToLast,
   limit,
   orderBy,
-  where,
-  Blob,
-  GeoPoint,
-  Timestamp
+  where
 } from '../exports';
 import { UntypedFirestoreDataConverter } from '../../src/api/user_data_reader';
 import { isPartialObserver, PartialObserver } from '../../src/api/observer';

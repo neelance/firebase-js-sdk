@@ -15,7 +15,10 @@
  * limitations under the License.
  */
 
+import {configureSerializer} from "../../src/remote/serializer";
 import '../register';
+
+configureSerializer(/* useProto3Json =*/ true);
 
 /**
  * This will include all of the test files and compile them as needed

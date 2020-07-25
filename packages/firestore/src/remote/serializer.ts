@@ -121,7 +121,7 @@ export function configureSerializer(useProto3Json: boolean) : void {
 export function newSerializer(databaseId: DatabaseId): JsonProtoSerializer {
   debugAssert(
     usesProto3Json !== undefined,
-    '"usesProto3Json" not set. Must call setJsonSerializationOptions()'
+    '"usesProto3Json" not set. Must call configureSerializer()'
   );
   return new JsonProtoSerializer(databaseId, usesProto3Json);
 }

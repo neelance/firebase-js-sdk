@@ -76,8 +76,8 @@ export class WebChannelConnection extends RestConnection {
         try {
           switch (xhr.getLastErrorCode()) {
             case ErrorCode.NO_ERROR:
-              const json = xhr.getResponseJson();
-              resolve(json as Resp);
+              const json = xhr.getResponseJson() as Resp;
+              resolve(json);
               break;
             case ErrorCode.TIMEOUT:
               logDebug(LOG_TAG, 'RPC "' + rpcName + '" timed out');

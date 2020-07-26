@@ -74,11 +74,7 @@ export abstract class RestConnection implements Connection {
 
     logDebug(LOG_TAG, 'Sending: ', url,  jsonObj);
 
-    // Content-Type: text/plain will avoid preflight requests which might
-    // mess with CORS and redirects by proxies. If we add custom headers
-    // we will need to change this code to potentially use the $httpOverwrite
-    // parameter supported by ESF to avoid	triggering preflight requests.
-    const headers: StringMap = { 'Content-Type': 'text/plain' };
+    const headers  = {};
     this.modifyHeadersForRequest(headers, token);
 
     return this.performRPCRequest<Indexable, Resp>(
@@ -116,6 +112,12 @@ export abstract class RestConnection implements Connection {
     headers: StringMap,
     token: Token | null
   ): void {
+    // Content-Type: text/plain will avoid preflight requests which might
+    // mess with CORS and redirects by proxies. If we add custom headers
+    // we will need to change this code to potentially use the $httpOverwrite
+    // parameter supported by ESF to avoid	triggering preflight requests.
+    headers['Content-Type'] = 'text/plain'
+    headers['X-Goog-Api-Client'] = X_GOOG_API_CLIENT_VALUE;
     if (token) {
       for (const header in token.authHeaders) {
         if (token.authHeaders.hasOwnProperty(header)) {
@@ -123,7 +125,7 @@ export abstract class RestConnection implements Connection {
         }
       }
     }
-    headers['X-Goog-Api-Client'] = X_GOOG_API_CLIENT_VALUE;
+    
   }
 
   /**

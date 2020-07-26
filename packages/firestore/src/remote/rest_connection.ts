@@ -118,7 +118,7 @@ export abstract class RestConnection implements Connection {
     // mess with CORS and redirects by proxies. If we add custom headers
     // we will need to change this code to potentially use the $httpOverwrite
     // parameter supported by ESF to avoid	triggering preflight requests.
-    headers['Content-Type'] = 'text/plain'
+    headers['Content-Type'] = 'text/plain';
     
     if (token) {
       for (const header in token.authHeaders) {

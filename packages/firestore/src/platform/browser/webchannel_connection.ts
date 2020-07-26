@@ -35,21 +35,20 @@ import {
 } from '@firebase/util';
 
 import { Token } from '../../api/credentials';
-import { DatabaseInfo } from '../../core/database_info';
-import { Stream } from '../../remote/connection';
+import { DatabaseId, DatabaseInfo } from '../../core/database_info';
+import { SDK_VERSION } from '../../core/version';
+import { Connection, Stream } from '../../remote/connection';
 import {
   mapCodeFromRpcStatus,
   mapCodeFromHttpResponseErrorStatus
 } from '../../remote/rpc_error';
 import { StreamBridge } from '../../remote/stream_bridge';
-import {debugAssert, fail, hardAssert} from '../../util/assert';
+import { debugAssert, fail, hardAssert } from '../../util/assert';
 import { Code, FirestoreError } from '../../util/error';
 import { logDebug, logWarn } from '../../util/log';
+import { Indexable } from '../../util/misc';
 import { Rejecter, Resolver } from '../../util/promise';
 import { StringMap } from '../../util/types';
-import { RestConnection } from '../../remote/rest_connection';
-import {Indexable} from "../../util/misc";
-import {SDK_VERSION} from "../../core/version";
 
 const LOG_TAG = 'Connection';
 
@@ -72,19 +71,23 @@ const X_GOOG_API_CLIENT_VALUE = 'gl-js/ fire/' + SDK_VERSION;
 
 const XHR_TIMEOUT_SECS = 15;
 
-export class WebChannelConnection extends RestConnection {
+export class WebChannelConnection implements Connection {
+  private readonly databaseId: DatabaseId;
+  private readonly baseUrl: string;
   private readonly forceLongPolling: boolean;
 
-  constructor(databaseInfo: DatabaseInfo) {
-    super(databaseInfo);
-    this.forceLongPolling = databaseInfo.forceLongPolling;
+  constructor(info: DatabaseInfo) {
+    this.databaseId = info.databaseId;
+    const proto = info.ssl ? 'https' : 'http';
+    this.baseUrl = proto + '://' + info.host;
+    this.forceLongPolling = info.forceLongPolling;
   }
 
   /**
    * Modifies the headers for a request, adding any authorization token if
    * present and any additional headers for the request.
    */
-  protected modifyHeadersForRequest(
+  private modifyHeadersForRequest(
     headers: StringMap,
     token: Token | null
   ): void {
@@ -103,7 +106,7 @@ export class WebChannelConnection extends RestConnection {
     request: Req,
     token: Token | null
   ): Promise<Resp> {
-    const url = this.makeUrl2(rpcName);
+    const url = this.makeUrl(rpcName);
 
     return new Promise((resolve: Resolver<Resp>, reject: Rejecter) => {
       const xhr = new XhrIo();
@@ -167,13 +170,13 @@ export class WebChannelConnection extends RestConnection {
             default:
               fail(
                 'RPC "' +
-                  rpcName +
-                  '" failed with unanticipated ' +
-                  'webchannel error ' +
-                  xhr.getLastErrorCode() +
-                  ': ' +
-                  xhr.getLastError() +
-                  ', giving up.'
+                rpcName +
+                '" failed with unanticipated ' +
+                'webchannel error ' +
+                xhr.getLastErrorCode() +
+                ': ' +
+                xhr.getLastError() +
+                ', giving up.'
               );
           }
         } finally {
@@ -419,7 +422,7 @@ export class WebChannelConnection extends RestConnection {
   }
 
   // visible for testing
-  private makeUrl2(rpcName: string): string {
+  makeUrl(rpcName: string): string {
     const urlRpcName = RPC_NAME_REST_MAPPING[rpcName];
     debugAssert(
       urlRpcName !== undefined,
@@ -436,9 +439,5 @@ export class WebChannelConnection extends RestConnection {
       '/documents:' +
       urlRpcName
     );
-  }
-
-  protected performRPCRequest<Req, Resp>(rpcName: string, url: string, headers: StringMap, body: Req): Promise<Resp> {
-    return Promise.resolve({} as unknown as Resp);
   }
 }

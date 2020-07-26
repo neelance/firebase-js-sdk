@@ -42,16 +42,34 @@ import {
   mapCodeFromHttpResponseErrorStatus
 } from '../../remote/rpc_error';
 import { StreamBridge } from '../../remote/stream_bridge';
-import { fail, hardAssert } from '../../util/assert';
+import {debugAssert, fail, hardAssert} from '../../util/assert';
 import { Code, FirestoreError } from '../../util/error';
 import { logDebug, logWarn } from '../../util/log';
 import { Rejecter, Resolver } from '../../util/promise';
 import { StringMap } from '../../util/types';
 import { RestConnection } from '../../remote/rest_connection';
+import {Indexable} from "../../util/misc";
+import {SDK_VERSION} from "../../core/version";
 
 const LOG_TAG = 'Connection';
 
 const RPC_STREAM_SERVICE = 'google.firestore.v1.Firestore';
+const RPC_URL_VERSION = 'v1';
+
+/**
+ * Maps RPC names to the corresponding REST endpoint name.
+ * Uses Object Literal notation to avoid renaming.
+ */
+const RPC_NAME_REST_MAPPING: { [key: string]: string } = {};
+RPC_NAME_REST_MAPPING['BatchGetDocuments'] = 'batchGet';
+RPC_NAME_REST_MAPPING['Commit'] = 'commit';
+RPC_NAME_REST_MAPPING['RunQuery'] = 'runQuery';
+
+// TODO(b/38203344): The SDK_VERSION is set independently from Firebase because
+// we are doing out-of-band releases. Once we release as part of Firebase, we
+// should use the Firebase version instead.
+const X_GOOG_API_CLIENT_VALUE = 'gl-js/ fire/' + SDK_VERSION;
+
 const XHR_TIMEOUT_SECS = 15;
 
 export class WebChannelConnection extends RestConnection {
@@ -62,13 +80,30 @@ export class WebChannelConnection extends RestConnection {
     this.forceLongPolling = databaseInfo.forceLongPolling;
   }
 
-  protected performRPCRequest<Req, Resp>(
-    rpcName: string,
-    url: string,
+  /**
+   * Modifies the headers for a request, adding any authorization token if
+   * present and any additional headers for the request.
+   */
+  protected modifyHeadersForRequest(
     headers: StringMap,
-    body: Req
+    token: Token | null
+  ): void {
+    if (token) {
+      for (const header in token.authHeaders) {
+        if (token.authHeaders.hasOwnProperty(header)) {
+          headers[header] = token.authHeaders[header];
+        }
+      }
+    }
+    headers['X-Goog-Api-Client'] = X_GOOG_API_CLIENT_VALUE;
+  }
+
+  invokeRPC<Req, Resp>(
+    rpcName: string,
+    request: Req,
+    token: Token | null
   ): Promise<Resp> {
-    const requestString = JSON.stringify(body);
+    const url = this.makeUrl2(rpcName);
 
     return new Promise((resolve: Resolver<Resp>, reject: Rejecter) => {
       const xhr = new XhrIo();
@@ -77,6 +112,7 @@ export class WebChannelConnection extends RestConnection {
           switch (xhr.getLastErrorCode()) {
             case ErrorCode.NO_ERROR:
               const json = xhr.getResponseJson() as Resp;
+              logDebug(LOG_TAG, 'XHR received:', JSON.stringify(json));
               resolve(json);
               break;
             case ErrorCode.TIMEOUT:
@@ -122,6 +158,7 @@ export class WebChannelConnection extends RestConnection {
               } else {
                 // If we received an HTTP_ERROR but there's no status code,
                 // it's most probably a connection issue
+                logDebug(LOG_TAG, 'RPC "' + rpcName + '" failed');
                 reject(
                   new FirestoreError(Code.UNAVAILABLE, 'Connection failed.')
                 );
@@ -143,8 +180,36 @@ export class WebChannelConnection extends RestConnection {
           logDebug(LOG_TAG, 'RPC "' + rpcName + '" completed.');
         }
       });
+
+      // The database field is already encoded in URL. Specifying it again in
+      // the body is not necessary in production, and will cause duplicate field
+      // errors in the Firestore Emulator. Let's remove it.
+      const jsonObj = ({ ...request } as unknown) as Indexable;
+      delete jsonObj.database;
+
+      const requestString = JSON.stringify(jsonObj);
+      logDebug(LOG_TAG, 'XHR sending: ', url + ' ' + requestString);
+      // Content-Type: text/plain will avoid preflight requests which might
+      // mess with CORS and redirects by proxies. If we add custom headers
+      // we will need to change this code to potentially use the
+      // $httpOverwrite parameter supported by ESF to avoid
+      // triggering preflight requests.
+      const headers: StringMap = { 'Content-Type': 'text/plain' };
+
+      this.modifyHeadersForRequest(headers, token);
+
       xhr.send(url, 'POST', requestString, headers, XHR_TIMEOUT_SECS);
     });
+  }
+
+  invokeStreamingRPC<Req, Resp>(
+    rpcName: string,
+    request: Req,
+    token: Token | null
+  ): Promise<Resp[]> {
+    // The REST API automatically aggregates all of the streamed results, so we
+    // can just use the normal invoke() method.
+    return this.invokeRPC<Req, Resp[]>(rpcName, request, token);
   }
 
   openStream<Req, Resp>(
@@ -351,5 +416,29 @@ export class WebChannelConnection extends RestConnection {
       streamBridge.callOnOpen();
     }, 0);
     return streamBridge;
+  }
+
+  // visible for testing
+  private makeUrl2(rpcName: string): string {
+    const urlRpcName = RPC_NAME_REST_MAPPING[rpcName];
+    debugAssert(
+      urlRpcName !== undefined,
+      'Unknown REST mapping for: ' + rpcName
+    );
+    return (
+      this.baseUrl +
+      '/' +
+      RPC_URL_VERSION +
+      '/projects/' +
+      this.databaseId.projectId +
+      '/databases/' +
+      this.databaseId.database +
+      '/documents:' +
+      urlRpcName
+    );
+  }
+
+  protected performRPCRequest<Req, Resp>(rpcName: string, url: string, headers: StringMap, body: Req): Promise<Resp> {
+    return Promise.resolve({} as unknown as Resp);
   }
 }
